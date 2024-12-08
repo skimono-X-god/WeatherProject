@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода по адресам</title>
+</head>
+<body>
+    {% if warning_msg %}
+        <h2>{{ warning_msg }}</h2>
+    {% endif %}
+
+    <h1>Введите два адреса для проверки погоды</h1>
+
+    <form action="/" method="POST">
+        <label for="start_address">Адрес отправления:</label>
+        <input type="text" id="start_address" name="start_address" required><br><br>
+
+        <label for="end_address">Адрес прибытия:</label>
+        <input type="text" id="end_address" name="end_address" required><br><br>
+
+        <button type="submit">Проверить погоду</button>
+    </form>
+
+    {% if weather %}
+    <h2>Результат проверки погоды:</h2>
+
+    <h3>Адрес 1 ({{ start_address }}):</h3>
+    <p>Температура: {{ weather.start_address.temperature }}°C</p>
+    <p>Влажность: {{ weather.start_address.humidity }}%</p>
+    <p>Скорость ветра: {{ weather.start_address.wind_speed }} км/ч</p>
+    <p>Вероятность осадков: {{ weather.start_address.prec_prob }}%</p>
+
+    <h3>Адрес 2 ({{ end_address }}):</h3>
+    <p>Температура: {{ weather.end_address.temperature }}°C</p>
+    <p>Влажность: {{ weather.end_address.humidity }}%</p>
+    <p>Скорость ветра: {{ weather.end_address.wind_speed }} км/ч</p>
+    <p>Вероятность осадков: {{ weather.end_address.prec_prob }}%</p>
+
+    {% elif error %}
+        <h3>Ошибка: {{ error }}</h3>
+    {% endif %}
+</body>
+</html>

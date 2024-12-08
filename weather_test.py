@@ -10,8 +10,7 @@ def get_weather(lat, lon):
         params = {"lat": lat, "lon": lon, "lang": "ru_RU"}
         response = requests.get(BASE_URL, headers=headers, params=params)
         if response.status_code != 200:
-            print(f"{response.status_code} проверьте ключ или доступность сервиса")
-            raise
+            return response.status_code
         weather_data = response.json()
         #Я сохранял json файл, чтобы изучить его структуру
         #with open('weather_data.json', 'w') as file:
@@ -31,10 +30,6 @@ def get_weather(lat, lon):
     except Exception as e:
         return {"error": str(e)}
 
-'''
-У меня плохой уровень Англиского, поэтому я решил использовать Яндекс погоду.
-+ надо поддерживать отечественного производителя.
-
 latitude = 55.7558
 longitude = 37.6173
 weather = get_weather(latitude, longitude)
@@ -47,5 +42,3 @@ latitude = 43.401075
 longitude = 39.965027
 weather = get_weather(latitude, longitude)
 print(weather)#Проверили погоду в Сочи
-'''
-#Запросы работают корректно, все файн
