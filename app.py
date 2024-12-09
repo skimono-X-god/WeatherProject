@@ -26,7 +26,7 @@ def get_weather(lat, lon):
         }
         return result
     except Exception as e:
-        return {"error": str(e)}
+        return str(e)
 
 
 def get_coordinates(name_city):
@@ -44,7 +44,7 @@ def get_coordinates(name_city):
                 return float(lat), float(lon)
         except ValueError:
             return "Ошибка при парсинге ответа от сервера."
-    return "Ошибка запроса или пустой ответ от API."
+    return f"Проблемы с сервером {response.status_code}"
 
 
 def check_good_weather(weather_data):
@@ -62,14 +62,67 @@ def home():
     if request.method == 'POST':
         start_address = request.form.get('start_address')
         end_address = request.form.get('end_address')
-        start_lat, start_lon = get_coordinates(start_address)
-        end_lat, end_lon = get_coordinates(end_address)
+        result = get_coordinates(start_address)
+        start_lat, start_lon, end_lat, end_lon = None, None, None, None
+        if type(result) == str:
+            if (result == "Ошибка при парсинге ответа от сервера."):
+                result += "Искренне извиняемся, разработчик скоро пофиксит баг!"
+                render_template('index.html', error=result)
+            else:
+                res = result.split('.')
+                if res[1] == '400':
+                    return render_template('index.html', error="В запросе отсутствует обязательный параметр или указано неверное значение параметра. Проверьте правильность ввода!")
+                elif res[1] == '403':
+                    return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
+                elif res[1] == '429':
+                    return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
+                else:
+                    return render_template('index.html', error=result)
+        else:
+            start_lat, start_lon = result
+        result = get_coordinates(end_address)
+        if type(result) == str:
+            if (result == "Ошибка при парсинге ответа от сервера."):
+                result += "Искренне извиняемся, разработчик скоро пофиксит баг!"
+                render_template('index.html', error=result)
+            else:
+                res = result.split('.')
+                if res[1] == '400':
+                    return render_template('index.html', error="В запросе отсутствует обязательный параметр или указано неверное значение параметра. Проверьте правильность ввода!")
+                elif res[1] == '403':
+                    return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
+                elif res[1] == '429':
+                    return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
+                else:
+                    return render_template('index.html', error=result)
+        else:
+            end_lat, end_lon = result
         if not start_lat or not start_lon or not end_lat or not end_lon:
             return render_template('index.html', error="Не удалось получить координаты для одного или обоих адресов.")
         start_weather = get_weather(start_lat, start_lon)
+        if type(start_weather) == str:
+            return render_template('index.html', error="Извините, но похоже, что разработчик допустил баги. Не волнуйтесь, скоро пофиксим.")
+        elif type(start_weather) == int:
+            if start_weather == 400:
+                return render_template('index.html', error="Ошибка запроса или пустой ответ от API. Проверьте правильность ввода!")
+            elif start_weather == 403:
+                return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
+            elif start_weather == 429:
+                return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
+            else:
+                return render_template('index.html', error=f"{start_weather} Ошибка сервера")
         end_weather = get_weather(end_lat, end_lon)
-        if 'error' in start_weather or 'error' in end_weather:
-            return render_template('index.html', error="Не удалось получить данные о погоде.")
+        if type(end_weather) == str:
+            return render_template('index.html', error="Извините, но похоже, что разработчик допустил баги. Не волнуйтесь, скоро пофиксим.")
+        elif type(end_weather) == int:
+            if end_weather == 400:
+                return render_template('index.html', error="Ошибка запроса или пустой ответ от API. Проверьте правильность ввода!")
+            elif end_weather == 403:
+                return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
+            elif end_weather == 429:
+                return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
+            else:
+                return render_template('index.html', error=f"{end_weather} Ошибка сервера")
 
         start_weather['good_weather'] = check_good_weather(start_weather)
         end_weather['good_weather'] = check_good_weather(end_weather)

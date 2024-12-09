@@ -28,13 +28,13 @@
     <h3>Адрес 1 ({{ start_address }}):</h3>
     <p>Температура: {{ weather.start_address.temperature }}°C</p>
     <p>Влажность: {{ weather.start_address.humidity }}%</p>
-    <p>Скорость ветра: {{ weather.start_address.wind_speed }} км/ч</p>
+    <p>Скорость ветра: {{ weather.start_address.wind_speed }} м/с</p>
     <p>Вероятность осадков: {{ weather.start_address.prec_prob }}%</p>
 
     <h3>Адрес 2 ({{ end_address }}):</h3>
     <p>Температура: {{ weather.end_address.temperature }}°C</p>
     <p>Влажность: {{ weather.end_address.humidity }}%</p>
-    <p>Скорость ветра: {{ weather.end_address.wind_speed }} км/ч</p>
+    <p>Скорость ветра: {{ weather.end_address.wind_speed }} м/с</p>
     <p>Вероятность осадков: {{ weather.end_address.prec_prob }}%</p>
 
     {% elif error %}
