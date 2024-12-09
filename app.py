@@ -44,7 +44,7 @@ def get_coordinates(name_city):
                 return float(lat), float(lon)
         except ValueError:
             return "Ошибка при парсинге ответа от сервера."
-    return f"Проблемы с сервером {response.status_code}"
+    return f"Проблемы с сервером.{response.status_code}"
 
 
 def check_good_weather(weather_data):
@@ -77,7 +77,7 @@ def home():
                 elif res[1] == '429':
                     return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
                 else:
-                    return render_template('index.html', error=result)
+                    return render_template('index.html', error=f"{result} Проверьте правильность ввода!")
         else:
             start_lat, start_lon = result
         result = get_coordinates(end_address)
@@ -94,7 +94,7 @@ def home():
                 elif res[1] == '429':
                     return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
                 else:
-                    return render_template('index.html', error=result)
+                    return render_template('index.html', error=f"{result} Проверьте правильность ввода!")
         else:
             end_lat, end_lon = result
         if not start_lat or not start_lon or not end_lat or not end_lon:
