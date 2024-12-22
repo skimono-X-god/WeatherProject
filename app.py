@@ -5,14 +5,21 @@ app = Flask(__name__)
 
 
 def get_weather(lat, lon):
-    API_KEY = "af26f54f-1383-4191-829e-5f6da0776a48"
+    API_KEY = "7c5ea75c-f294-4003-9b98-7dff2c45e57c"
     BASE_URL = "https://api.weather.yandex.ru/v2/forecast"
     try:
         headers = {"X-Yandex-API-Key": API_KEY}
         params = {"lat": lat, "lon": lon, "lang": "ru_RU"}
         response = requests.get(BASE_URL, headers=headers, params=params)
         if response.status_code != 200:
-            return response.status_code
+            if response.status_code == 400:
+                return "Ошибка запроса или пустой ответ от API. Проверьте правильность ввода!"
+            elif response.status_code == 403:
+                return "Извините, но похоже наш Api ключ сломался"
+            elif response.status_code == 429:
+                return "Извините, но мы достигли лимита запросов в секунду"
+            else:
+                return f"{response.status_code} Ошибка сервера"
         weather_data = response.json()
         temperature = weather_data['fact']['temp']
         humidity = weather_data['fact']['humidity']
@@ -26,7 +33,7 @@ def get_weather(lat, lon):
         }
         return result
     except Exception as e:
-        return str(e)
+        return f"Извините, но похоже, что разработчик допустил баги. Не волнуйтесь, скоро пофиксим. {e}"
 
 
 def get_coordinates(name_city):
@@ -44,7 +51,14 @@ def get_coordinates(name_city):
                 return float(lat), float(lon)
         except ValueError:
             return "Ошибка при парсинге ответа от сервера."
-    return f"Проблемы с сервером.{response.status_code}"
+    if response.status_code == 400:
+        return "В запросе отсутствует обязательный параметр или указано неверное значение параметра. Проверьте правильность ввода!"
+    elif response.status_code == 403:
+        return "Извините, но похоже наш Api ключ сломался"
+    elif response.status_code == 429:
+        return "Извините, но мы достигли лимита запросов в секунду"
+    else:
+        return f"{response.status_code} Ошибка сервера"
 
 
 def check_good_weather(weather_data):
@@ -65,64 +79,22 @@ def home():
         result = get_coordinates(start_address)
         start_lat, start_lon, end_lat, end_lon = None, None, None, None
         if type(result) == str:
-            if (result == "Ошибка при парсинге ответа от сервера."):
-                result += "Искренне извиняемся, разработчик скоро пофиксит баг!"
-                render_template('index.html', error=result)
-            else:
-                res = result.split('.')
-                if res[1] == '400':
-                    return render_template('index.html', error="В запросе отсутствует обязательный параметр или указано неверное значение параметра. Проверьте правильность ввода!")
-                elif res[1] == '403':
-                    return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
-                elif res[1] == '429':
-                    return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
-                else:
-                    return render_template('index.html', error=f"{result} Проверьте правильность ввода!")
+            render_template('index.html', error = result)
         else:
             start_lat, start_lon = result
         result = get_coordinates(end_address)
         if type(result) == str:
-            if (result == "Ошибка при парсинге ответа от сервера."):
-                result += "Искренне извиняемся, разработчик скоро пофиксит баг!"
-                render_template('index.html', error=result)
-            else:
-                res = result.split('.')
-                if res[1] == '400':
-                    return render_template('index.html', error="В запросе отсутствует обязательный параметр или указано неверное значение параметра. Проверьте правильность ввода!")
-                elif res[1] == '403':
-                    return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
-                elif res[1] == '429':
-                    return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
-                else:
-                    return render_template('index.html', error=f"{result} Проверьте правильность ввода!")
+            render_template('index.html', error=result)
         else:
             end_lat, end_lon = result
         if not start_lat or not start_lon or not end_lat or not end_lon:
             return render_template('index.html', error="Не удалось получить координаты для одного или обоих адресов.")
         start_weather = get_weather(start_lat, start_lon)
         if type(start_weather) == str:
-            return render_template('index.html', error="Извините, но похоже, что разработчик допустил баги. Не волнуйтесь, скоро пофиксим.")
-        elif type(start_weather) == int:
-            if start_weather == 400:
-                return render_template('index.html', error="Ошибка запроса или пустой ответ от API. Проверьте правильность ввода!")
-            elif start_weather == 403:
-                return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
-            elif start_weather == 429:
-                return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
-            else:
-                return render_template('index.html', error=f"{start_weather} Ошибка сервера")
+            return render_template('index.html', error=start_weather)
         end_weather = get_weather(end_lat, end_lon)
         if type(end_weather) == str:
-            return render_template('index.html', error="Извините, но похоже, что разработчик допустил баги. Не волнуйтесь, скоро пофиксим.")
-        elif type(end_weather) == int:
-            if end_weather == 400:
-                return render_template('index.html', error="Ошибка запроса или пустой ответ от API. Проверьте правильность ввода!")
-            elif end_weather == 403:
-                return render_template('index.html', error="Извините, но похоже наш Api ключ сломался")
-            elif end_weather == 429:
-                return render_template('index.html', error="Извините, но мы достигли лимита запросов в секунду")
-            else:
-                return render_template('index.html', error=f"{end_weather} Ошибка сервера")
+            return render_template('index.html', error=end_weather)
 
         start_weather['good_weather'] = check_good_weather(start_weather)
         end_weather['good_weather'] = check_good_weather(end_weather)
