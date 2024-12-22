@@ -3,40 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Погода по адресам</title>
+    <title>Проверка погоды по адресам</title>
+    <script>
+        function addIntermediateAddress() {
+            const container = document.getElementById("intermediate_addresses_container");
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = "intermediate_addresses";
+            input.placeholder = "Промежуточный адрес";
+            container.appendChild(input);
+            container.appendChild(document.createElement("br"));
+        }
+    </script>
 </head>
 <body>
     {% if warning_msg %}
         <h2>{{ warning_msg }}</h2>
     {% endif %}
 
-    <h1>Введите два адреса для проверки погоды</h1>
+    <h1>Проверка погоды по адресам</h1>
 
     <form action="/" method="POST">
         <label for="start_address">Адрес отправления:</label>
-        <input type="text" id="start_address" name="start_address" required><br><br>
+        <input type="text" id="start_address" name="start_address" value="{{ start_address }}" required><br><br>
+
+        <div id="intermediate_addresses_container">
+            <label for="intermediate_addresses">Промежуточные адреса:</label><br>
+            {% for address in intermediate_addresses %}
+                <input type="text" name="intermediate_addresses" placeholder="Промежуточный адрес" value="{{ address }}" /><br>
+            {% endfor %}
+        </div>
+        <button type="button" onclick="addIntermediateAddress()">Добавить промежуточный адрес</button><br><br>
 
         <label for="end_address">Адрес прибытия:</label>
-        <input type="text" id="end_address" name="end_address" required><br><br>
+        <input type="text" id="end_address" name="end_address" value="{{ end_address }}" required><br><br>
+
+        <label for="days">На сколько дней нужен прогноз:</label>
+        <select id="days" name="days" required>
+            <option value="1">1 день</option>
+            <option value="3">3 дня</option>
+            <option value="6">6 дней</option>
+        </select><br><br>
 
         <button type="submit">Проверить погоду</button>
     </form>
 
+    <hr>
+    <h3><a href="/dash/">Перейти к графикам погоды</a></h3>
+    <h3><a href="/map">Посмотреть маршрут на карте</a></h3>
     {% if weather %}
-    <h2>Результат проверки погоды:</h2>
+        <h2>Результат проверки погоды:</h2>
 
-    <h3>Адрес 1 ({{ start_address }}):</h3>
-    <p>Температура: {{ weather.start_address.temperature }}°C</p>
-    <p>Влажность: {{ weather.start_address.humidity }}%</p>
-    <p>Скорость ветра: {{ weather.start_address.wind_speed }} м/с</p>
-    <p>Вероятность осадков: {{ weather.start_address.prec_prob }}%</p>
+        <h3>Адрес отправления ({{ start_address }}):</h3>
+        {% for day in weather[start_address] %}
+            <p>Дата: {{ day.date }}</p>
+            <p>Температура: {{ day.temperature }}°C</p>
+            <p>Влажность: {{ day.humidity }}%</p>
+            <p>Скорость ветра: {{ day.wind_speed }} м/с</p>
+            <p>Вероятность осадков: {{ day.prec_prob }}%</p>
+        {% endfor %}
 
-    <h3>Адрес 2 ({{ end_address }}):</h3>
-    <p>Температура: {{ weather.end_address.temperature }}°C</p>
-    <p>Влажность: {{ weather.end_address.humidity }}%</p>
-    <p>Скорость ветра: {{ weather.end_address.wind_speed }} м/с</p>
-    <p>Вероятность осадков: {{ weather.end_address.prec_prob }}%</p>
+        {% for addr in intermediate_addresses %}
+            <h3>Промежуточный адрес ({{ addr }}):</h3>
+            {% if addr in weather %}
+                {% for day in weather[addr] %}
+                    <p>Дата: {{ day.date }}</p>
+                    <p>Температура: {{ day.temperature }}°C</p>
+                    <p>Влажность: {{ day.humidity }}%</p>
+                    <p>Скорость ветра: {{ day.wind_speed }} м/с</p>
+                    <p>Вероятность осадков: {{ day.prec_prob }}%</p>
+                {% endfor %}
+            {% else %}
+                <p>Нет данных о погоде для промежуточного адреса ({{ addr }}).</p>
+            {% endif %}
+        {% endfor %}
 
+        <h3>Адрес прибытия ({{ end_address }}):</h3>
+        {% for day in weather[end_address] %}
+            <p>Дата: {{ day.date }}</p>
+            <p>Температура: {{ day.temperature }}°C</p>
+            <p>Влажность: {{ day.humidity }}%</p>
+            <p>Скорость ветра: {{ day.wind_speed }} м/с</p>
+            <p>Вероятность осадков: {{ day.prec_prob }}%</p>
+        {% endfor %}
     {% elif error %}
         <h3>Ошибка: {{ error }}</h3>
     {% endif %}
