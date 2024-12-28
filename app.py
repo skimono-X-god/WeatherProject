@@ -1,6 +1,8 @@
+from sys import intern
+
 import requests
 import folium
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objs as go
 
@@ -177,6 +179,32 @@ def update_graph(selected_parameter):
 def map_view():
     return render_template('map.html')
 
+#Для черного проекта
+@app.route('/weather', methods=['GET'])
+def get_weather2():
+    try:
+        points = request.args.get('points').split(',')
+        interval = request.args.get('interval')
+        result_for_points = []
+        # Логирование вызова API
+        print(f"Points: {points}, Interval: {interval}")
+
+        for point in points:
+            coords = get_coordinates(point)
+            if coords is None:
+                return jsonify(error=f"Не удалось получить координаты для '{point}'"), 400
+
+            lat, lon = coords
+            weather = get_weather(lat, lon, interval)
+            if isinstance(weather, str):
+                return jsonify(error=weather), 400
+
+            result_for_points.append([point.strip(), weather])
+
+        return jsonify(result_for_points)
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify(error=str(e)), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
